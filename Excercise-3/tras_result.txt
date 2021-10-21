@@ -1,0 +1,2 @@
+Standart output: I am a happy child
+ffff content: I am a teacher!
