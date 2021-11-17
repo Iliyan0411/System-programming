@@ -9,3 +9,5 @@ Excercise-4: dup() system primitive.
 Excercise-5: fork() and wait().
 
 Excercise-6: General problems.
+
+Excercise-7: Creating of myself prompt.
