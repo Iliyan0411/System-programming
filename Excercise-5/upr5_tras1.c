@@ -1,16 +1,18 @@
-#include        <stdio.h>
-#include        <stdlib.h>
-#include        <unistd.h>
-#include        <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <wait.h>
 
-main ()
+int main ()
 {
-int pid, status ;
-char  c = '0', d = 'b';
+int pid, status;
+char c = '0', d = 'b';
 
-pid = fork ( ) ;
-if  (  pid != 0  )
-{ c = '2';  wait(&status);
+pid = fork();
+if(pid != 0)
+{ 
+        c = '2';  wait(&status);
 }
 else
 {  d = 'z';

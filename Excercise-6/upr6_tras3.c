@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <wait.h>
+
 #define CMD "who"
 
 int main()

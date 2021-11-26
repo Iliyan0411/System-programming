@@ -16,11 +16,9 @@ int main(int argc, char *argv[])
       }
       else
       {
-            // printf("%s\n", "Here1");
             j = dup(1);
             fd = open(argv[1], O_RDWR);
             nb1 = read(0, buf, 5);
-            // printf("%d\n", nb1);
             write(j, buf, nb1);
             nb1 = read(fd, buf, 5);
             write(1, buf, nb1);
