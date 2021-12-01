@@ -4,33 +4,28 @@
 #include <fcntl.h>
 #include <wait.h>
 #include <string.h>
+#include <stdbool.h>
 
 char *clearWhitespaces(const char *str)
 {
     int j = 0;
+    bool inWord = false;
     char *cleanedStr = (char *)calloc(512, sizeof(char));
 
     for (int i = 0; i < strlen(str); ++i)
     {
-        if (j == 0){
-            if (str[i] != ' ' && str[i] != '\t'){
-                cleanedStr[j++] = str[i];
-            }
-        }
-        else{
+        if(str[i] != ' ' && str[i] != '\t'){
+            inWord = true;
             cleanedStr[j++] = str[i];
         }
-    }
-
-    if (cleanedStr != NULL){
-        for (int i = strlen(cleanedStr) - 1; i >= 0; --i)
-        {
-            if (cleanedStr[i] != ' ' && cleanedStr[i] != '\t'){
-                cleanedStr[i] = '\0';
-                break;
+        else{
+            if(inWord){
+                cleanedStr[j++] = ' ';
+                inWord = false;
             }
         }
     }
+    cleanedStr[--j] = '\0';
 
     return cleanedStr;
 }
@@ -72,20 +67,20 @@ int main(int argc, char **argv)
 {
     while (1)
     {
-        write(1, "\033[0;31m", 7); // Red color of a text
+        write(1, "\033[0;31m", 7);
         write(1, "prompt> ", 8);
-        write(1, "\033[0m", 4); // Reset default color
+        write(1, "\033[0m", 4);
 
         char *command = (char *)calloc(512, sizeof(char));
-        read(0, command, 510); // Reading commands
+        read(0, command, 510);
 
         char *temp = (char *)calloc(512, sizeof(char));
-        strcpy(temp, clearWhitespaces(command));
+        temp = clearWhitespaces(command);
 
         char **commands = (char **)calloc(70, sizeof(char));
         commands = split(temp);
 
-        if (strlen(temp) == 3 && temp[0] == 'b' && temp[1] == 'y' && temp[2] == 'e'){
+        if (!strcmp(temp, "bye")){
             free(command);
             free(temp);
             clearMemory(commands);
@@ -97,13 +92,15 @@ int main(int argc, char **argv)
         free(temp);
 
         if (command[0] != '\n'){
-            int pid = fork(), error = 0, status = 0;
+            int pid = fork();
+            bool error = false;
 
             if (pid < 0){
                 write(1, "Error with fork() command!\n", 27);
-                error = 1;
+                error = true;
             }
             else if (pid > 0){
+                int status;
                 wait(&status);
 
                 free(command);
@@ -115,8 +112,8 @@ int main(int argc, char **argv)
                 }
             }
             else{
-                if (error == 0){
-                    execvp(commands[0], commands);
+                if (!error){
+                    exit(execvp(commands[0], commands));
                 }
                 exit(-1);
             }
