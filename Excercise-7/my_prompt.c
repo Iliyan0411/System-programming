@@ -30,10 +30,9 @@ char *clearWhitespaces(const char *str)
     return cleanedStr;
 }
 
-char **split(const char *str)
+char **split(const char *str, int *j)
 {
     char **args = (char **)calloc(200, sizeof(char));
-    int j = 0, i = 0;
 
     for (int i = 0; i < strlen(str); i++)
     {
@@ -46,7 +45,9 @@ char **split(const char *str)
         }
 
         if (k > 0){
-            args[j++] = buffer;
+            int temp = *j;
+            args[temp++] = buffer;
+            *j = temp;
         }
     }
 
@@ -60,6 +61,47 @@ void clearMemory(char **str)
         free(str[i]);
     }
     free(str);
+}
+
+bool hasVerticalLine(char **commands, int numberOfCommands)
+{
+    for(int i = 0; i < numberOfCommands; ++i)
+    {
+        if(!strcmp(commands[i], "|")){
+            return true;
+        }
+    }
+
+    return false;
+}
+
+char** getHalfArgs(char** commands, int numberOfCommands, bool leftArgs)
+{
+    char **args = (char **)malloc(100 * sizeof(char));
+    int j = 0;
+
+    if(leftArgs){
+        int i = 0;
+        while(strcmp(commands[i], "|"))
+        {
+            args[i] = commands[i++];
+        }
+    }
+    else{
+        bool finded = false;
+        for(int i = 0; i < numberOfCommands; ++i)
+        {
+            if(finded){
+                args[j++] = commands[i];
+            }
+
+            if(!strcmp(commands[i], "|")){
+                finded = true;
+            }
+        }
+    }
+
+    return args;
 }
 
 
@@ -77,8 +119,8 @@ int main(int argc, char **argv)
         char *temp = (char *)calloc(512, sizeof(char));
         temp = clearWhitespaces(command);
 
-        char **commands = (char **)calloc(70, sizeof(char));
-        commands = split(temp);
+        int numberOfCommands = 0;
+        char **commands = split(temp, &numberOfCommands);
 
         if (!strcmp(temp, "bye")){
             free(command);
@@ -91,13 +133,63 @@ int main(int argc, char **argv)
         }
         free(temp);
 
-        if (command[0] != '\n'){
+        if(hasVerticalLine(commands, numberOfCommands)){
+            char** leftArgs = getHalfArgs(commands, numberOfCommands, true);
+            char** rightArgs = getHalfArgs(commands, numberOfCommands, false);
+
+            int pid1 = fork();
+
+            if(pid1 < 0){
+                write(1, "Fork error", 10);
+            }
+            else if(pid1 > 0){
+                int status1;
+                wait(&status1);
+
+                if(status1 != 0){
+                    write(1, "Error with command execution!\n", 30);
+                }
+            }
+            else{
+                int fd[2];
+                if(pipe(fd) == -1){
+                    write(1, "Pipe error!\n", 12);
+                }
+
+                int pid2 = fork();
+
+                if(pid2 < 0){
+                    write(1, "Fork error", 10);
+                }
+                else if(pid2 > 0){
+                    int status2;
+                    wait(&status2);
+
+                    close(0);
+                    dup(fd[0]);
+                    close(fd[0]);
+                    close(fd[1]);
+
+                    exit(execvp(rightArgs[0], rightArgs));
+                }
+                else{
+                    close(1);
+                    dup(fd[1]);
+                    close(fd[0]);
+                    close(fd[1]);
+
+                    exit(execvp(leftArgs[0], leftArgs));
+                }
+            }
+
+            free(command);
+            clearMemory(commands);
+        }
+        else if (command[0] != '\n'){
             int pid = fork();
-            bool error = false;
 
             if (pid < 0){
                 write(1, "Error with fork() command!\n", 27);
-                error = true;
             }
             else if (pid > 0){
                 int status;
@@ -112,10 +204,7 @@ int main(int argc, char **argv)
                 }
             }
             else{
-                if (!error){
-                    exit(execvp(commands[0], commands));
-                }
-                exit(-1);
+                exit(execvp(commands[0], commands));
             }
         }
         else{
