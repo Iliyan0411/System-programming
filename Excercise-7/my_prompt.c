@@ -14,12 +14,12 @@ char *clearWhitespaces(const char *str)
 
     for (int i = 0; i < strlen(str); ++i)
     {
-        if(str[i] != ' ' && str[i] != '\t'){
+        if (str[i] != ' ' && str[i] != '\t'){
             inWord = true;
             cleanedStr[j++] = str[i];
         }
         else{
-            if(inWord){
+            if (inWord){
                 cleanedStr[j++] = ' ';
                 inWord = false;
             }
@@ -65,9 +65,9 @@ void clearMemory(char **str)
 
 bool hasVerticalLine(char **commands, int numberOfCommands)
 {
-    for(int i = 0; i < numberOfCommands; ++i)
+    for (int i = 0; i < numberOfCommands; ++i)
     {
-        if(!strcmp(commands[i], "|")){
+        if (!strcmp(commands[i], "|")){
             return true;
         }
     }
@@ -75,27 +75,29 @@ bool hasVerticalLine(char **commands, int numberOfCommands)
     return false;
 }
 
-char** getHalfArgs(char** commands, int numberOfCommands, bool leftArgs)
+char **getHalfArgs(char **commands, int numberOfCommands, bool leftArgs)
 {
     char **args = (char **)malloc(100 * sizeof(char));
-    int j = 0;
 
-    if(leftArgs){
+    if (leftArgs){
         int i = 0;
-        while(strcmp(commands[i], "|"))
+        while (strcmp(commands[i], "|"))
         {
-            args[i] = commands[i++];
+            args[i] = commands[i];
+            i++;
         }
     }
     else{
         bool finded = false;
-        for(int i = 0; i < numberOfCommands; ++i)
+        int j = 0;
+
+        for (int i = 0; i < numberOfCommands; ++i)
         {
-            if(finded){
+            if (finded){
                 args[j++] = commands[i];
             }
 
-            if(!strcmp(commands[i], "|")){
+            if (!strcmp(commands[i], "|")){
                 finded = true;
             }
         }
@@ -103,7 +105,6 @@ char** getHalfArgs(char** commands, int numberOfCommands, bool leftArgs)
 
     return args;
 }
-
 
 int main(int argc, char **argv)
 {
@@ -133,35 +134,35 @@ int main(int argc, char **argv)
         }
         free(temp);
 
-        if(hasVerticalLine(commands, numberOfCommands)){
-            char** leftArgs = getHalfArgs(commands, numberOfCommands, true);
-            char** rightArgs = getHalfArgs(commands, numberOfCommands, false);
+        if (hasVerticalLine(commands, numberOfCommands)){
+            char **leftArgs = getHalfArgs(commands, numberOfCommands, true);
+            char **rightArgs = getHalfArgs(commands, numberOfCommands, false);
 
             int pid1 = fork();
 
-            if(pid1 < 0){
+            if (pid1 < 0){
                 write(1, "Fork error", 10);
             }
-            else if(pid1 > 0){
+            else if (pid1 > 0){
                 int status1;
                 wait(&status1);
 
-                if(status1 != 0){
+                if (status1 != 0){
                     write(1, "Error with command execution!\n", 30);
                 }
             }
             else{
                 int fd[2];
-                if(pipe(fd) == -1){
+                if (pipe(fd) == -1){
                     write(1, "Pipe error!\n", 12);
                 }
 
                 int pid2 = fork();
 
-                if(pid2 < 0){
+                if (pid2 < 0){
                     write(1, "Fork error", 10);
                 }
-                else if(pid2 > 0){
+                else if (pid2 > 0){
                     int status2;
                     wait(&status2);
 
@@ -198,8 +199,7 @@ int main(int argc, char **argv)
                 free(command);
                 clearMemory(commands);
 
-                if (status != 0)
-                {
+                if (status != 0){
                     write(1, "Error with command execution!\n", 30);
                 }
             }
